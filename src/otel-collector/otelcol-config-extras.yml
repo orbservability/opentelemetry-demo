@@ -1,13 +1,22 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# Extras/customization layer for the OTel Collector.
-# Exports all signals to the ClickHouse instance running in the orbservability monorepo.
+# Orbservability exporter — local development fallback.
+#
+# In production, tenants replace this file with a remote config layer:
+#
+#   export ORBSERVABILITY_TOKEN="<tenant_id>.<hmac_signature>"
+#   otelcol --config=/etc/otelcol-config.yml \
+#           --config=https://orbservability.com/api/v1/ingest/${ORBSERVABILITY_TOKEN}
+#
+# The collector fetches tenant-scoped YAML (with ClickHouse credentials)
+# and merges it as the final layer — no local secrets, no proxy hop.
 
 exporters:
-  clickhouse:
+  clickhouse/orbservability:
     endpoint: tcp://host.docker.internal:9000?dial_timeout=10s
     database: otel
+    username: default
     create_schema: true
     logs:
       table_name: otel_logs
@@ -19,9 +28,9 @@ exporters:
 service:
   pipelines:
     traces:
-      exporters: [debug, span_metrics, clickhouse]
+      exporters: [debug, span_metrics, clickhouse/orbservability]
     metrics:
       receivers: [docker_stats, http_check/frontend-proxy, host_metrics, nginx, otlp, redis, postgresql, prometheus/ad, span_metrics]
-      exporters: [debug, clickhouse]
+      exporters: [debug, clickhouse/orbservability]
     logs:
-      exporters: [debug, clickhouse]
+      exporters: [debug, clickhouse/orbservability]
