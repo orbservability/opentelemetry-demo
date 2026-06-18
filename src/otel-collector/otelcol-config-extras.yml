@@ -14,16 +14,13 @@
 
 exporters:
   clickhouse/orbservability:
-    endpoint: tcp://host.docker.internal:9000?dial_timeout=10s
-    database: otel
-    username: default
+    endpoint: tcp://${env:ORBSERVABILITY_CH_HOST:-host.docker.internal}:9000?dial_timeout=10s
+    database: ${env:ORBSERVABILITY_CH_DATABASE:-otel}
+    username: ${env:ORBSERVABILITY_CH_USER:-default}
+    password: ${env:ORBSERVABILITY_CH_PASSWORD:-orbservability}
     create_schema: true
-    logs:
-      table_name: otel_logs
-    traces:
-      table_name: otel_traces
-    metrics:
-      table_name: otel_metrics
+    logs_table_name: otel_logs
+    traces_table_name: otel_traces
 
 service:
   pipelines:
